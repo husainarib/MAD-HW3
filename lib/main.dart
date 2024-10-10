@@ -65,3 +65,11 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 }
+
+// data model for the cards
+class CardModel {
+  final String cardRank;
+  bool isFaceUp;
+
+  CardModel({required this.cardRank, this.isFaceUp = false});
+}
