@@ -73,3 +73,16 @@ class CardModel {
 
   CardModel({required this.cardRank, this.isFaceUp = false});
 }
+
+// manages the state of the card
+class CardProvider extends ChangeNotifier {
+  List<CardModel> cards = List.generate(
+    16,
+    (index) => CardModel(cardRank: 'Card $index'),
+  );
+
+  void flipCard(int index) {
+    cards[index].isFaceUp = !cards[index].isFaceUp;
+    notifyListeners();
+  }
+}
