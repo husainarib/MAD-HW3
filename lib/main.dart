@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:math';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CardProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -45,20 +53,31 @@ class _GameScreenState extends State<GameScreen> {
             crossAxisSpacing: 8.0,
             mainAxisSpacing: 8.0,
           ),
-          itemCount: 16,
+          itemCount: cardProvider.cards.length,
           itemBuilder: (context, index) {
+            final card = cardProvider.cards[index];
             return GestureDetector(
               onTap: () {
-                // TODO IMPLEMENT FLIP
+                cardProvider.flipCard(index);
               },
               child: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  image: const DecorationImage(
-                    image: AssetImage("lib/img/card_back.png"),
-                    fit: BoxFit.contain,
-                  ),
+                ),
+                child: Center(
+                  child: card.isFaceUp
+                      ? Text(
+                          card.cardNum,
+                          style: const TextStyle(
+                            fontSize: 100,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        )
+                      : Image.asset(
+                          cardBack,
+                          fit: BoxFit.contain,
+                        ),
                 ),
               ),
             );
@@ -69,42 +88,59 @@ class _GameScreenState extends State<GameScreen> {
   }
 }
 
-// data model for the cards
 class CardModel {
-  final String cardFront;
+  final String cardNum;
   bool isFaceUp;
 
-  CardModel({required this.cardFront, this.isFaceUp = false});
+  CardModel({required this.cardNum, this.isFaceUp = false});
 }
 
-// manages the state of the card
 class CardProvider extends ChangeNotifier {
-  List<CardModel> cards = List.generate(
-    16,
-    (index) => CardModel(cardFront: 'Card $index'),
-  );
+  List<CardModel> cards = [];
 
   int? firstFlippedCardPos;
+  bool isMatch = false;
 
-// card flipping and matching logic
+  CardProvider() {
+    _initializeCards();
+  }
+
+  // create cards with random numbers
+  void _initializeCards() {
+    List<String> cardNums = List.generate(8, (index) => '${index + 1}');
+    cardNums = [...cardNums, ...cardNums];
+    // shuffle cards around the screen
+    cardNums.shuffle(Random());
+    cards = cardNums.map((number) => CardModel(cardNum: number)).toList();
+  }
+
+  // flipCard method to match cards
   void flipCard(int index) {
-    if (!cards[index].isFaceUp) {
-      // check if card tapped on is the first card tapped on
-      if (firstFlippedCardPos == null) {
-        firstFlippedCardPos = index;
+    if (isMatch || cards[index].isFaceUp) return;
+    cards[index].isFaceUp = true;
+
+    if (firstFlippedCardPos == null) {
+      firstFlippedCardPos = index;
+    } else {
+      // checks if the second card matches with first card up
+      if (cards[firstFlippedCardPos!].cardNum == cards[index].cardNum) {
+        // keep both cards face-up
+        firstFlippedCardPos = null;
       } else {
-        // if this is the second card being tapped on, check for a match
-        if (cards[firstFlippedCardPos!].cardFront == cards[index].cardFront) {
-          // if its a match leave both cards face up
-          firstFlippedCardPos = null;
-        } else {
+        // flip both cards back to show back of card
+        isMatch = true;
+        // delay to keep card with face up, visible when another card is tapped
+        Future.delayed(const Duration(seconds: 1), () {
+          // flip both cards back to original position
           cards[firstFlippedCardPos!].isFaceUp = false;
           cards[index].isFaceUp = false;
           firstFlippedCardPos = null;
-        }
+          isMatch = false;
+          notifyListeners();
+        });
       }
     }
-    cards[index].isFaceUp = !cards[index].isFaceUp;
+
     notifyListeners();
   }
 }
