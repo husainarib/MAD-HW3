@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -30,6 +31,8 @@ class _GameScreenState extends State<GameScreen> {
   String cardBack = "lib/img/card_back.png";
   @override
   Widget build(BuildContext context) {
+    final cardProvider = Provider.of<CardProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Card Matching Game'),
@@ -68,20 +71,39 @@ class _GameScreenState extends State<GameScreen> {
 
 // data model for the cards
 class CardModel {
-  final String cardRank;
+  final String cardFront;
   bool isFaceUp;
 
-  CardModel({required this.cardRank, this.isFaceUp = false});
+  CardModel({required this.cardFront, this.isFaceUp = false});
 }
 
 // manages the state of the card
 class CardProvider extends ChangeNotifier {
   List<CardModel> cards = List.generate(
     16,
-    (index) => CardModel(cardRank: 'Card $index'),
+    (index) => CardModel(cardFront: 'Card $index'),
   );
 
+  int? firstFlippedCardPos;
+
+// card flipping and matching logic
   void flipCard(int index) {
+    if (!cards[index].isFaceUp) {
+      // check if card tapped on is the first card tapped on
+      if (firstFlippedCardPos == null) {
+        firstFlippedCardPos = index;
+      } else {
+        // if this is the second card being tapped on, check for a match
+        if (cards[firstFlippedCardPos!].cardFront == cards[index].cardFront) {
+          // if its a match leave both cards face up
+          firstFlippedCardPos = null;
+        } else {
+          cards[firstFlippedCardPos!].isFaceUp = false;
+          cards[index].isFaceUp = false;
+          firstFlippedCardPos = null;
+        }
+      }
+    }
     cards[index].isFaceUp = !cards[index].isFaceUp;
     notifyListeners();
   }
