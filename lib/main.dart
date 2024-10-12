@@ -60,9 +60,15 @@ class _GameScreenState extends State<GameScreen> {
               onTap: () {
                 cardProvider.flipCard(index);
               },
-              child: Container(
-                decoration: const BoxDecoration(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 500),
+                decoration: BoxDecoration(
                   color: Colors.white,
+                  border: Border.all(
+                    color: card.isFaceUp ? Colors.black : Colors.transparent,
+                    width: 10,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Center(
                   child: card.isFaceUp
@@ -130,7 +136,7 @@ class CardProvider extends ChangeNotifier {
         // flip both cards back to show back of card
         isMatch = true;
         // delay to keep card with face up, visible when another card is tapped
-        Future.delayed(const Duration(seconds: 1), () {
+        Future.delayed(const Duration(milliseconds: 500), () {
           // flip both cards back to original position
           cards[firstFlippedCardPos!].isFaceUp = false;
           cards[index].isFaceUp = false;
