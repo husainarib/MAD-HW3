@@ -40,11 +40,10 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     final cardProvider = Provider.of<CardProvider>(context);
-
-    // Get the card size based on screen width
-    double cardSize = MediaQuery.of(context).size.width / 5;
-
-    // ScrollController for handling the scrolling behavior
+    // variables to control sizing
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+    double cardSize = min(screenWidth / 4.5, screenHeight / 8);
     ScrollController scrollController = ScrollController();
 
     return Scaffold(
@@ -106,14 +105,14 @@ class _GameScreenState extends State<GameScreen> {
                           height: cardSize,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            border: Border.all(color: Colors.black, width: 10),
+                            border: Border.all(color: Colors.black, width: 5),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Center(
                             child: Text(
                               card.cardNum,
-                              style: const TextStyle(
-                                fontSize: 100,
+                              style: TextStyle(
+                                fontSize: cardSize / 2.5,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black,
                               ),
@@ -133,6 +132,8 @@ class _GameScreenState extends State<GameScreen> {
                           child: Image.asset(
                             "lib/img/card_back.png",
                             fit: BoxFit.contain,
+                            height: cardSize,
+                            width: cardSize,
                           ),
                         ),
                 ),
@@ -198,7 +199,6 @@ class CardProvider extends ChangeNotifier {
         });
       }
     }
-
     notifyListeners();
   }
 }
