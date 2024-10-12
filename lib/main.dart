@@ -41,59 +41,111 @@ class _GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) {
     final cardProvider = Provider.of<CardProvider>(context);
 
+    // Get the card size based on screen width
+    double cardSize = MediaQuery.of(context).size.width / 5;
+
+    // ScrollController for handling the scrolling behavior
+    ScrollController scrollController = ScrollController();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Card Matching Game'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(10),
-        child: GridView.builder(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            crossAxisSpacing: 8.0,
-            mainAxisSpacing: 8.0,
-          ),
-          itemCount: cardProvider.cards.length,
-          itemBuilder: (context, index) {
-            final card = cardProvider.cards[index];
-            return GestureDetector(
-              onTap: () {
-                cardProvider.flipCard(index);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 500),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(
-                    color: card.isFaceUp ? Colors.black : Colors.transparent,
-                    width: 10,
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Center(
+        child: Scrollbar(
+          controller: scrollController,
+          thumbVisibility: true,
+          thickness: 10,
+          radius: const Radius.circular(10),
+          trackVisibility: true,
+          scrollbarOrientation: ScrollbarOrientation.right,
+          child: GridView.builder(
+            controller: scrollController,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              crossAxisSpacing: 8.0,
+              mainAxisSpacing: 8.0,
+            ),
+            itemCount: cardProvider.cards.length,
+            itemBuilder: (context, index) {
+              final card = cardProvider.cards[index];
+
+              return GestureDetector(
+                onTap: () {
+                  cardProvider.flipCard(index);
+                },
+                // animation
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  transitionBuilder:
+                      (Widget child, Animation<double> animation) {
+                    return AnimatedBuilder(
+                      animation: animation,
+                      builder: (context, child) {
+                        final rotationY = animation.value * pi;
+                        return Transform(
+                          transform: Matrix4.identity()..rotateY(rotationY),
+                          alignment: Alignment.center,
+                          child: rotationY >= pi / 2
+                              ? Transform(
+                                  transform: Matrix4.identity()..rotateY(pi),
+                                  alignment: Alignment.center,
+                                  child: child,
+                                )
+                              : child,
+                        );
+                      },
+                      child: child,
+                    );
+                  },
                   child: card.isFaceUp
-                      ? Text(
-                          card.cardNum,
-                          style: const TextStyle(
-                            fontSize: 100,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                      ? Container(
+                          key: const ValueKey(true),
+                          width: cardSize,
+                          height: cardSize,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: Colors.black, width: 10),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Center(
+                            child: Text(
+                              card.cardNum,
+                              style: const TextStyle(
+                                fontSize: 100,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
                           ),
                         )
-                      : Image.asset(
-                          cardBack,
-                          fit: BoxFit.contain,
+                      : Container(
+                          key: const ValueKey(false),
+                          width: cardSize,
+                          height: cardSize,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(
+                                color: Colors.transparent, width: 10),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Image.asset(
+                            "lib/img/card_back.png",
+                            fit: BoxFit.contain,
+                          ),
                         ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
   }
 }
 
+// data model for cards
 class CardModel {
   final String cardNum;
   bool isFaceUp;
